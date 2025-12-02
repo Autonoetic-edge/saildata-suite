@@ -1,0 +1,41 @@
+# Fixes for Data Display and Accessibility Issues
+
+I have addressed the issues where export/import data was not showing up after creation and fixed the accessibility warnings in the console.
+
+## Changes Made
+
+### 1. Data Display Fixes
+- **Updated Services**: Added [create](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts#47-66), [update](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/importController.ts#49-77), and [delete](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts#74-88) methods to [exportService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts) and [importService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/importService.ts).
+- **Updated Pages**: Modified [Export.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Export.tsx) and [Import.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Import.tsx) to:
+    - Call the API to create/update records when the form is submitted.
+    - Call the API to delete records when requested.
+    - Refresh the data list immediately after any operation.
+    - Map frontend form data to the backend database schema.
+
+### 2. Accessibility Fixes
+- **ExportForm.tsx & ImportForm.tsx**: Added `<DialogDescription>` to the dialog headers to satisfy accessibility requirements.
+- **Navigation.tsx**: Added `<SheetHeader>`, `<SheetTitle>`, and `<SheetDescription>` to the mobile navigation menu.
+
+## Verification Steps
+
+Please verify the fixes by performing the following actions in the application:
+
+1.  **Create a Record**:
+    - Go to the Export or Import page.
+    - Click "Add Record".
+    - Fill in the form and submit.
+    - **Expected Result**: A success toast appears, and the new record is immediately visible in the table.
+
+2.  **Edit a Record**:
+    - Click the Edit icon on a record.
+    - Change some values and save.
+    - **Expected Result**: The record updates in the table with the new values.
+
+3.  **Delete a Record**:
+    - Click the Delete icon on a record.
+    - **Expected Result**: The record is removed from the table.
+
+4.  **Check Console**:
+    - Open the browser console (F12).
+    - Navigate around and open dialogs.
+    - **Expected Result**: The warnings about `DialogContent` missing `DialogTitle` or `Description` should be gone.
