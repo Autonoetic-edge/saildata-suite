@@ -45,6 +45,7 @@ const Export = () => {
 
         const mappedData = response.data.map(item => ({
           id: item.id,
+          sNo: item.s_no,
           jobNo: item.job_no,
           invoiceNo: item.inv_no,
           invoiceDate: item.date,
@@ -57,20 +58,21 @@ const Export = () => {
           containerSize: item.size,
           shippingLine: item.s_line,
           pod: item.pod,
-          status: "Pending", // Default as not in DB
-          invoiceValue: "0.00", // Not in DB schema shown in controller
-          fobValue: "0.00", // Not in DB schema
-          // Fields missing in DB but used in UI
-          trainNo: null,
-          wagonNo: null,
-          reward: null,
-          dbkAmount: null,
-          igstAmount: null,
-          egmNo: null,
-          egmDate: null,
-          dbkScrollNo: null,
-          scrollDate: null,
-          remarks: null
+          trainNo: item.train_no,
+          wagonNo: item.wagon_no,
+          wagonDate: item.wagon_date,
+          reward: item.reward,
+          invoiceValue: item.inv_value_fc || 0,
+          fobValue: item.fob_value_inr || 0,
+          dbkAmount: item.dbk_amount || 0,
+          igstAmount: item.igst_amount || 0,
+          egmNo: item.egm_no,
+          egmDate: item.egm_date,
+          currentQty: item.current_qty,
+          dbkScrollNo: item.dbk_scroll_no,
+          scrollDate: item.scroll_date,
+          remarks: item.remarks,
+          status: "Pending" // Default status
         }));
 
         setData(mappedData);
@@ -274,72 +276,116 @@ const Export = () => {
       {/* Data Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="overflow-x-auto max-w-full">
+            <Table className="min-w-[3000px]">
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Job No</TableHead>
-                  <TableHead className="font-semibold">Invoice No</TableHead>
-                  <TableHead className="font-semibold">Invoice Date</TableHead>
-                  <TableHead className="font-semibold">S/Bill No</TableHead>
-                  <TableHead className="font-semibold">Forwarder</TableHead>
-                  <TableHead className="font-semibold">Shipping Line</TableHead>
-                  <TableHead className="font-semibold">POD</TableHead>
-                  <TableHead className="font-semibold">Container Size</TableHead>
-                  <TableHead className="font-semibold">Invoice Value (FC)</TableHead>
-                  <TableHead className="font-semibold">FOB Value (INR)</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="text-right font-semibold">Actions</TableHead>
+                  <TableHead className="font-semibold sticky left-0 bg-muted/50 z-10 min-w-[80px]">S/NO</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Job No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Inv No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Date</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">S/Bill No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">S/Bill Date</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">LEO Date</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Forwarder Name</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">Booking No</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">Container No</TableHead>
+                  <TableHead className="font-semibold min-w-[80px]">Size</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">S/Line</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">POD</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Train No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Wagon No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Wagon Date</TableHead>
+                  <TableHead className="font-semibold min-w-[80px]">Reward</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">Inv Value (FC)</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">FOB Value (INR)</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">DBK Amount</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">IGST Amount</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">EGM No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">EGM Date</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Current Qty</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">DBK Scroll No</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Scroll Date</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Remarks</TableHead>
+                  <TableHead className="font-semibold min-w-[80px]">Status</TableHead>
+                  <TableHead className="text-right font-semibold sticky right-0 bg-muted/50 z-10 min-w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentRecords.map((record) => (
-                  <TableRow key={record.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-medium">{record.jobNo}</TableCell>
-                    <TableCell>{record.invoiceNo}</TableCell>
-                    <TableCell>{record.invoiceDate}</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>{record.forwarder}</TableCell>
-                    <TableCell>{record.forwarder}</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>{record.containerSize}</TableCell>
-                    <TableCell>${record.invoiceValue}</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(record.status)}>
-                        {record.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => handleViewDetails(record)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-primary"
-                          onClick={() => handleEdit(record)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => handleDelete(record)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={29} className="text-center py-10">Loading...</TableCell>
                   </TableRow>
-                ))}
+                ) : currentRecords.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={29} className="text-center py-10 text-muted-foreground">No records found</TableCell>
+                  </TableRow>
+                ) : (
+                  currentRecords.map((record) => (
+                    <TableRow key={record.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-medium sticky left-0 bg-background z-10">{record.sNo || '-'}</TableCell>
+                      <TableCell>{record.jobNo || '-'}</TableCell>
+                      <TableCell>{record.invoiceNo || '-'}</TableCell>
+                      <TableCell>{record.invoiceDate ? format(new Date(record.invoiceDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell>{record.sBillNo || '-'}</TableCell>
+                      <TableCell>{record.sBillDate ? format(new Date(record.sBillDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell>{record.leoDate ? format(new Date(record.leoDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell>{record.forwarder || '-'}</TableCell>
+                      <TableCell>{record.bookingNo || '-'}</TableCell>
+                      <TableCell>{record.containerNo || '-'}</TableCell>
+                      <TableCell>{record.containerSize || '-'}</TableCell>
+                      <TableCell>{record.shippingLine || '-'}</TableCell>
+                      <TableCell>{record.pod || '-'}</TableCell>
+                      <TableCell>{record.trainNo || '-'}</TableCell>
+                      <TableCell>{record.wagonNo || '-'}</TableCell>
+                      <TableCell>{record.wagonDate ? format(new Date(record.wagonDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell>{record.reward || '-'}</TableCell>
+                      <TableCell>{record.invoiceValue ? `$${record.invoiceValue.toLocaleString()}` : '-'}</TableCell>
+                      <TableCell>{record.fobValue ? `₹${record.fobValue.toLocaleString()}` : '-'}</TableCell>
+                      <TableCell>{record.dbkAmount ? `₹${record.dbkAmount.toLocaleString()}` : '-'}</TableCell>
+                      <TableCell>{record.igstAmount ? `₹${record.igstAmount.toLocaleString()}` : '-'}</TableCell>
+                      <TableCell>{record.egmNo || '-'}</TableCell>
+                      <TableCell>{record.egmDate ? format(new Date(record.egmDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell>{record.currentQty || '-'}</TableCell>
+                      <TableCell>{record.dbkScrollNo || '-'}</TableCell>
+                      <TableCell>{record.scrollDate ? format(new Date(record.scrollDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell className="max-w-[150px] truncate" title={record.remarks}>{record.remarks || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStatusColor(record.status)}>
+                          {record.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right sticky right-0 bg-background z-10">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => handleViewDetails(record)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-primary"
+                            onClick={() => handleEdit(record)}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => handleDelete(record)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

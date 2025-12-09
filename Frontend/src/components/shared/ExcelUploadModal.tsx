@@ -40,18 +40,25 @@ export function ExcelUploadModal({ open, onOpenChange, type, onUploadComplete, o
     const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
     const normalizedExpected = expectedHeaders.map(h => h.toLowerCase().trim());
 
+    // Check that at least 70% of expected headers are present (to allow for minor variations)
+    let matchCount = 0;
     for (const expected of normalizedExpected) {
-      if (!normalizedHeaders.includes(expected)) {
-        return false;
+      if (expected === '' || expected === 'date') continue; // Skip empty and repeated Date headers
+      if (normalizedHeaders.some(h => h.includes(expected) || expected.includes(h))) {
+        matchCount++;
       }
     }
-    return true;
+
+    // Require at least 50% of unique headers to match
+    const uniqueExpected = normalizedExpected.filter(h => h !== '' && h !== 'date');
+    return matchCount >= uniqueExpected.length * 0.5;
   };
 
   const getExpectedHeaders = () => {
     if (type === "import") {
       return [
-        "job no", "shipper name", "invoice no & date", "fc value", "description",
+        "job no",
+        "", "shipper name", "invoice no & date", "fc value", "description",
         "forwarder name", "hbl no & date", "mbl no & date", "shipping line",
         "pol - port of loading", "terms", "container nos", "size",
         "n.n copy received", "original docs received", "arrival status",
@@ -59,13 +66,32 @@ export function ExcelUploadModal({ open, onOpenChange, type, onUploadComplete, o
         "hs code", "assessed value", "duty paid", "ooc date", "destuffed date", "remarks"
       ];
     } else {
+      // Export headers - key headers for validation
+      // We check for key identifying headers rather than all
       return [
-        "job no", "invoice no", "invoice date", "s/bill no", "s/bill date",
-        "leo date", "forwarder name", "booking no", "container no", "size",
-        "shipping line", "pod - port of discharge", "train no", "wagon no",
-        "reward", "invoice value (fc)", "fob value (inr)", "dbk amount (inr)",
-        "igst amount (inr)", "egm no", "egm date", "dbk scroll no",
-        "scroll date", "remarks"
+        "s/no",
+        "job.no",
+        "inv.no.",
+        "s/bill no.",
+        "leo date",
+        "forward name",
+        "booking no.",
+        "contr.no.",
+        "size",
+        "s/line",
+        "pod",
+        "train no.",
+        "wagon no.",
+        "reward",
+        "inv.value (fc)",
+        "fob value",
+        "dbk",
+        "igst",
+        "egm no.",
+        "current",
+        "dbk scroll",
+        "scroll dt.",
+        "remarks"
       ];
     }
   };

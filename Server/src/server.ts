@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import importRoutes from './routes/importRoutes';
 import exportRoutes from './routes/exportRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import pool from './config/database';
 
@@ -20,6 +22,8 @@ app.use(express.json());
 // Routes
 app.use('/api/v1/import', importRoutes);
 app.use('/api/v1/export', exportRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Health Check
 app.get('/health', async (req, res) => {

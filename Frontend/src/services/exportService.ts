@@ -2,6 +2,7 @@ import { API_BASE_URL, headers } from './api';
 
 export interface ExportRecord {
     id: number;
+    s_no: string;
     job_no: string;
     inv_no: string;
     date: string;
@@ -14,6 +15,20 @@ export interface ExportRecord {
     size: string;
     s_line: string;
     pod: string;
+    train_no: string;
+    wagon_no: string;
+    wagon_date: string;
+    reward: string;
+    inv_value_fc: number;
+    fob_value_inr: number;
+    dbk_amount: number;
+    igst_amount: number;
+    egm_no: string;
+    egm_date: string;
+    current_qty: string;
+    dbk_scroll_no: string;
+    scroll_date: string;
+    remarks: string;
     created_at: string;
     updated_at: string;
 }

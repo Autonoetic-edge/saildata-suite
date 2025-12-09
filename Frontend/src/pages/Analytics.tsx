@@ -16,39 +16,61 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { TrendingUp, Package, FileText, DollarSign } from "lucide-react";
+import { useEffect, useState } from "react";
+import { analyticsService, MonthlyData, ForwarderData, ContainerData, StatusData, AnalyticsTotals } from "@/services/analyticsService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 const Analytics = () => {
-  // Mock data for charts
-  const monthlyData = [
-    { month: "Jan", import: 45, export: 32 },
-    { month: "Feb", import: 52, export: 38 },
-    { month: "Mar", import: 48, export: 42 },
-    { month: "Apr", import: 61, export: 45 },
-    { month: "May", import: 55, export: 48 },
-    { month: "Jun", import: 67, export: 52 },
-  ];
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [forwarderData, setForwarderData] = useState<ForwarderData[]>([]);
+  const [containerSizeData, setContainerSizeData] = useState<ContainerData[]>([]);
+  const [statusData, setStatusData] = useState<StatusData[]>([]);
+  const [totals, setTotals] = useState<AnalyticsTotals | null>(null);
 
-  const forwarderData = [
-    { name: "DHL", value: 450 },
-    { name: "FedEx", value: 380 },
-    { name: "Maersk", value: 320 },
-    { name: "CMA CGM", value: 280 },
-  ];
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      setIsLoading(true);
+      try {
+        const [overview, forwarders, containers, status, totalsData] = await Promise.all([
+          analyticsService.getOverview(),
+          analyticsService.getForwarderStats(),
+          analyticsService.getContainerStats(),
+          analyticsService.getStatusStats(),
+          analyticsService.getTotals(),
+        ]);
+        setMonthlyData(overview);
+        setForwarderData(forwarders);
+        setContainerSizeData(containers);
+        setStatusData(status);
+        setTotals(totalsData);
+      } catch (error) {
+        console.error("Failed to fetch analytics data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load analytics data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const containerSizeData = [
-    { name: "20'", import: 120, export: 95 },
-    { name: "40'", import: 180, export: 145 },
-    { name: "40'HC", import: 95, export: 78 },
-    { name: "45'", import: 65, export: 52 },
-  ];
-
-  const statusData = [
-    { name: "Delivered", value: 680 },
-    { name: "In Transit", value: 340 },
-    { name: "Pending", value: 180 },
-  ];
+    fetchAnalyticsData();
+  }, [toast]);
 
   const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--success))", "hsl(var(--warning))"];
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) {
+      return `₹${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `₹${(value / 1000).toFixed(1)}K`;
+    }
+    return `₹${value.toFixed(0)}`;
+  };
 
   return (
     <div className="container mx-auto space-y-6 p-4 md:p-6">
@@ -70,8 +92,16 @@ const Analytics = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,090</div>
-            <p className="text-xs text-success">+12% from last month</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{totals?.totalShipments?.toLocaleString() || 0}</div>
+                <p className={`text-xs ${(totals?.totalTrend || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {(totals?.totalTrend || 0) >= 0 ? '+' : ''}{totals?.totalTrend || 0}% from last month
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -82,8 +112,16 @@ const Analytics = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-success">+18% from last month</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{totals?.importVolume?.toLocaleString() || 0}</div>
+                <p className={`text-xs ${(totals?.importTrend || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {(totals?.importTrend || 0) >= 0 ? '+' : ''}{totals?.importTrend || 0}% from last month
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -94,8 +132,16 @@ const Analytics = () => {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">856</div>
-            <p className="text-xs text-success">+8% from last month</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{totals?.exportVolume?.toLocaleString() || 0}</div>
+                <p className={`text-xs ${(totals?.exportTrend || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {(totals?.exportTrend || 0) >= 0 ? '+' : ''}{totals?.exportTrend || 0}% from last month
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -106,8 +152,16 @@ const Analytics = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12.4M</div>
-            <p className="text-xs text-success">+15% from last month</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{formatCurrency(totals?.totalValue || 0)}</div>
+                <p className={`text-xs ${(totals?.valueTrend || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {(totals?.valueTrend || 0) >= 0 ? '+' : ''}{totals?.valueTrend || 0}% from last month
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -128,35 +182,43 @@ const Analytics = () => {
                 <CardTitle>Monthly Trends</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
-                    <YAxis stroke="hsl(var(--foreground))" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="import"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      name="Import"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="export"
-                      stroke="hsl(var(--secondary))"
-                      strokeWidth={2}
-                      name="Export"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {isLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : monthlyData.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    No data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                      <YAxis stroke="hsl(var(--foreground))" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="import"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        name="Import"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="export"
+                        stroke="hsl(var(--secondary))"
+                        strokeWidth={2}
+                        name="Export"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
@@ -165,10 +227,96 @@ const Analytics = () => {
                 <CardTitle>Import vs Export</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyData}>
+                {isLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : monthlyData.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    No data available
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                      <YAxis stroke="hsl(var(--foreground))" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="import" fill="hsl(var(--primary))" name="Import" />
+                      <Bar dataKey="export" fill="hsl(var(--secondary))" name="Export" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="forwarders" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Shipments by Forwarder</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-[400px] w-full" />
+              ) : forwarderData.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+                  No forwarder data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={forwarderData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={120}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {forwarderData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="containers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Container Size Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-[400px] w-full" />
+              ) : containerSizeData.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+                  No container data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={containerSizeData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                    <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
                     <YAxis stroke="hsl(var(--foreground))" />
                     <Tooltip
                       contentStyle={{
@@ -182,69 +330,7 @@ const Analytics = () => {
                     <Bar dataKey="export" fill="hsl(var(--secondary))" name="Export" />
                   </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="forwarders" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Shipments by Forwarder</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={forwarderData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {forwarderData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="containers" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Container Size Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={containerSizeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
-                  <YAxis stroke="hsl(var(--foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="import" fill="hsl(var(--primary))" name="Import" />
-                  <Bar dataKey="export" fill="hsl(var(--secondary))" name="Export" />
-                </BarChart>
-              </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -255,31 +341,39 @@ const Analytics = () => {
               <CardTitle>Shipment Status Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {isLoading ? (
+                <Skeleton className="h-[400px] w-full" />
+              ) : statusData.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+                  No status data available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={120}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

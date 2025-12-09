@@ -1,5 +1,6 @@
 export interface ExportData {
     id?: number;
+    s_no?: string;
     job_no: string;
     inv_no?: string;
     date?: Date;
@@ -12,6 +13,20 @@ export interface ExportData {
     size?: string;
     s_line?: string;
     pod?: string;
+    train_no?: string;
+    wagon_no?: string;
+    wagon_date?: Date;
+    reward?: string;
+    inv_value_fc?: number;
+    fob_value_inr?: number;
+    dbk_amount?: number;
+    igst_amount?: number;
+    egm_no?: string;
+    egm_date?: Date;
+    current_qty?: string;
+    dbk_scroll_no?: string;
+    scroll_date?: Date;
+    remarks?: string;
     created_at?: Date;
     updated_at?: Date;
 }

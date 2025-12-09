@@ -297,72 +297,106 @@ const Import = () => {
       {/* Data Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="overflow-x-auto max-w-full">
+            <Table className="min-w-[2000px]">
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Job No</TableHead>
-                  <TableHead className="font-semibold">Shipper Name</TableHead>
-                  <TableHead className="font-semibold">Invoice No & Date</TableHead>
-                  <TableHead className="font-semibold">FC Value</TableHead>
-                  <TableHead className="font-semibold">Forwarder</TableHead>
-                  <TableHead className="font-semibold">HBL No & Date</TableHead>
-                  <TableHead className="font-semibold">MBL No & Date</TableHead>
-                  <TableHead className="font-semibold">Shipping Line</TableHead>
-                  <TableHead className="font-semibold">POL</TableHead>
-                  <TableHead className="font-semibold">Container Size</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="text-right font-semibold">Actions</TableHead>
+                  <TableHead className="font-semibold sticky left-0 bg-muted/50 z-10 min-w-[100px]">Job No</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Shipper Name</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Invoice No & Date</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">FC Value</TableHead>
+                  <TableHead className="font-semibold min-w-[200px]">Description</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Forwarder</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">HBL No & Date</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">MBL No & Date</TableHead>
+                  <TableHead className="font-semibold min-w-[120px]">Shipping Line</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">POL</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">POD</TableHead>
+                  <TableHead className="font-semibold min-w-[80px]">Terms</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Container Nos</TableHead>
+                  <TableHead className="font-semibold min-w-[80px]">Size</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">NN Copy</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">Original Docs</TableHead>
+                  <TableHead className="font-semibold min-w-[100px]">ETA Date</TableHead>
+                  <TableHead className="font-semibold min-w-[150px]">Remarks</TableHead>
+                  <TableHead className="font-semibold min-w-[80px]">Status</TableHead>
+                  <TableHead className="text-right font-semibold sticky right-0 bg-muted/50 z-10 min-w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentRecords.map((record) => (
-                  <TableRow key={record.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-medium">{record.jobNo}</TableCell>
-                    <TableCell>{record.shipperName}</TableCell>
-                    <TableCell>{record.invoiceNo}</TableCell>
-                    <TableCell>${record.fcValue}</TableCell>
-                    <TableCell>{record.forwarder}</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>{record.forwarder}</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>{record.containerSize}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(record.status)}>
-                        {record.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => handleViewDetails(record)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-primary"
-                          onClick={() => handleEdit(record)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => handleDelete(record)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={20} className="text-center py-10">Loading...</TableCell>
                   </TableRow>
-                ))}
+                ) : currentRecords.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={20} className="text-center py-10 text-muted-foreground">No records found</TableCell>
+                  </TableRow>
+                ) : (
+                  currentRecords.map((record) => (
+                    <TableRow key={record.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-medium sticky left-0 bg-background z-10">{record.jobNo || '-'}</TableCell>
+                      <TableCell>{record.shipperName || '-'}</TableCell>
+                      <TableCell>{record.invoiceNo || '-'}</TableCell>
+                      <TableCell>{record.fcValue ? `$${record.fcValue}` : '-'}</TableCell>
+                      <TableCell className="max-w-[200px] truncate" title={record.description}>{record.description || '-'}</TableCell>
+                      <TableCell>{record.forwarder || '-'}</TableCell>
+                      <TableCell>{record.hblNo || '-'}</TableCell>
+                      <TableCell>{record.mblNo || '-'}</TableCell>
+                      <TableCell>{record.shippingLine || '-'}</TableCell>
+                      <TableCell>{record.pol || '-'}</TableCell>
+                      <TableCell>{record.pod || '-'}</TableCell>
+                      <TableCell>{record.terms || '-'}</TableCell>
+                      <TableCell className="max-w-[150px] truncate" title={record.containerNos}>{record.containerNos || '-'}</TableCell>
+                      <TableCell>{record.containerSize || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={record.nnCopyReceived ? "default" : "outline"} className={record.nnCopyReceived ? "bg-success/10 text-success" : ""}>
+                          {record.nnCopyReceived ? 'Yes' : 'No'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={record.originalDocsReceived ? "default" : "outline"} className={record.originalDocsReceived ? "bg-success/10 text-success" : ""}>
+                          {record.originalDocsReceived ? 'Yes' : 'No'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{record.etaDate ? format(new Date(record.etaDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell className="max-w-[150px] truncate" title={record.remarks}>{record.remarks || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStatusColor(record.status)}>
+                          {record.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right sticky right-0 bg-background z-10">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => handleViewDetails(record)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-primary"
+                            onClick={() => handleEdit(record)}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => handleDelete(record)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
