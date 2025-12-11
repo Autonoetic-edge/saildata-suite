@@ -1,0 +1,13 @@
+@echo off
+echo Stopping containers...
+docker-compose down -v
+echo.
+echo Starting database container...
+docker-compose up -d db
+echo.
+echo Waiting for database to initialize (10 seconds)...
+timeout /t 10 /nobreak
+echo.
+echo Starting backend...
+cd Server
+npm run dev

@@ -1,0 +1,36 @@
+# Bulk Upload Implementation
+
+I have implemented the backend logic for bulk uploading Excel files for both Exports and Imports, resolving the issue with [excelParser.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/utils/excelParser.ts) by integrating it into the application flow.
+
+## Changes Made
+
+### 1. Backend
+- **Middleware**: Created [Server/src/middleware/upload.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/middleware/upload.ts) to handle file uploads using `multer`.
+- **Controllers**:
+    - Updated [exportController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts) and [importController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/importController.ts) to include [bulkUploadExports](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts#91-161) and [bulkUploadImports](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/importController.ts#95-171).
+    - These functions parse the uploaded Excel file using [excelParser.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/utils/excelParser.ts), map the columns to the database schema, and insert the records.
+    - Added file cleanup to remove uploaded files after processing.
+- **Routes**:
+    - Updated [exportRoutes.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/routes/exportRoutes.ts) and [importRoutes.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/routes/importRoutes.ts) to expose `POST /upload` endpoints.
+
+### 2. Frontend
+- **Services**:
+    - Updated [exportService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts) and [importService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/importService.ts) to include [uploadExport](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts#104-126) and [uploadImport](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/importService.ts#110-132) methods that send the file to the backend.
+- **Components**:
+    - Updated [ExcelUploadModal.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/components/shared/ExcelUploadModal.tsx) to support an `onUpload` prop for handling actual file uploads via the backend, replacing the simulation.
+- **Pages**:
+    - Updated [Export.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Export.tsx) and [Import.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Import.tsx) to use the new backend upload functionality and refresh the data list upon completion.
+
+## Verification Steps
+
+1.  **Navigate to Export or Import Page**.
+2.  **Click "Bulk Import"**.
+3.  **Upload an Excel File**:
+    - Use the template (downloadable from the modal) or a valid Excel file.
+    - The file should contain headers matching the expected format (e.g., "Job No", "Invoice No", etc.).
+4.  **Confirm Upload**:
+    - The modal will validate headers client-side.
+    - Upon successful validation, it will upload the file to the backend.
+5.  **Verify Data**:
+    - A success toast will appear.
+    - The table will automatically refresh to show the newly imported records.

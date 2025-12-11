@@ -1,0 +1,226 @@
+# Implementation Walkthrough: Export Excel Headers & Dashboard Integration
+
+## Summary of Changes
+
+This implementation fixed the export Excel upload headers to match the user's provided template image and connected the Dashboard and Analytics pages to the backend for real-time data display.
+
+---
+
+## Changes Made
+
+### 1. Export Excel Headers Fix
+
+#### [ExcelUploadModal.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/components/shared/ExcelUploadModal.tsx)
+
+Updated the export headers to match the exact format from the provided Excel image:
+
+```typescript
+// Export headers matching the provided Excel template image
+return [
+  "S.NO",
+  "Job.No",
+  "Inv.No.",
+  "Date",
+  "S/Bill No.",
+  "Date",
+  "LEO Date",
+  "Forwarder Name",
+  "Booking No.",
+  "Contr.No",
+  "Size",
+  "S/Line",
+  "POD",
+  "Train No.",
+  "Wagon No.",
+  "Date",
+  "Reward",
+  "Inv.Value (FC)",
+  "FOB Value Amt.(INR)",
+  "DBK Amount Cye",
+  "IGST Amount",
+  "EGM No.",
+  "Date",
+  "Current Cye",
+  "DBK Scroll No.",
+  "Scroll Dt.",
+  "Remarks"
+];
+```
+
+---
+
+### 2. Database Schema Updates
+
+#### [schema.sql](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/database/schema.sql)
+
+Added complete `export_data` table with all 27 fields from the Excel template.
+
+#### [migrate_export_data.sql](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/database/migrate_export_data.sql)
+
+Created migration script for existing databases - adds new columns without data loss.
+
+---
+
+### 3. Backend Model Update
+
+#### [ExportModel.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/models/ExportModel.ts)
+
+Added all new fields to the TypeScript interface:
+- `s_no`, `train_no`, `wagon_no`, `wagon_date`, `reward`
+- `inv_value_fc`, `fob_value_inr`, `dbk_amount`, `igst_amount`
+- `egm_no`, `egm_date`, `current_qty`, `dbk_scroll_no`, `scroll_date`, `remarks`
+
+---
+
+### 4. Backend Controller Updates
+
+#### [exportController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts)
+
+Updated all CRUD operations to handle the new fields:
+- [createExport](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts#62-81) - inserts all 27 fields
+- [updateExport](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts#53-83) - updates all 27 fields
+- [bulkUploadExports](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts#99-201) - maps Excel headers to database columns
+
+---
+
+### 5. New Dashboard API
+
+#### [dashboardController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/dashboardController.ts) [NEW]
+
+Created endpoints for:
+- `GET /api/v1/dashboard/stats` - Returns total imports, exports, monthly counts, pending reviews, trends
+- `GET /api/v1/dashboard/recent-activity` - Returns recent import/export activity
+
+#### [dashboardRoutes.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/routes/dashboardRoutes.ts) [NEW]
+
+---
+
+### 6. New Analytics API
+
+#### [analyticsController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/analyticsController.ts) [NEW]
+
+Created endpoints for:
+- `GET /api/v1/analytics/overview` - Monthly trends for the last 6 months
+- `GET /api/v1/analytics/forwarders` - Shipments by forwarder (pie chart)
+- `GET /api/v1/analytics/containers` - Container size distribution (bar chart)
+- `GET /api/v1/analytics/totals` - Total values and percentage trends
+- `GET /api/v1/analytics/status` - Shipment status breakdown
+
+#### [analyticsRoutes.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/routes/analyticsRoutes.ts) [NEW]
+
+---
+
+### 7. Server Entry Point
+
+#### [server.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/server.ts)
+
+Added new routes:
+```typescript
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+```
+
+---
+
+### 8. Frontend Services
+
+#### [dashboardService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/dashboardService.ts) [NEW]
+
+Service to fetch dashboard stats and recent activity from API.
+
+#### [analyticsService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/analyticsService.ts) [NEW]
+
+Service to fetch analytics data (overview, forwarders, containers, totals, status) from API.
+
+#### [exportService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts)
+
+Updated [ExportRecord](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts#3-35) interface with all new fields.
+
+---
+
+### 9. Frontend Pages
+
+#### [Dashboard.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Dashboard.tsx)
+
+- Replaced mock data with real API calls using `dashboardService`
+- Added loading states with skeleton UI
+- Stats cards now show real counts and percentage trends
+- Recent activity shows actual database records
+
+#### [Analytics.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Analytics.tsx)
+
+- Replaced all mock chart data with real API calls using `analyticsService`
+- Added loading states for all charts
+- Charts now display actual data from the database
+
+#### [Export.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Export.tsx)
+
+Updated data mapping to use all new export fields.
+
+---
+
+## Database Migration Instructions
+
+If you have an existing database with data:
+
+```bash
+# Connect to your PostgreSQL database and run:
+psql -U your_user -d your_database -f Server/src/database/migrate_export_data.sql
+```
+
+For a fresh database:
+
+```bash
+psql -U your_user -d your_database -f Server/src/database/schema.sql
+```
+
+---
+
+## API Endpoints Summary
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/dashboard/stats` | Dashboard statistics |
+| GET | `/api/v1/dashboard/recent-activity` | Recent activity log |
+| GET | `/api/v1/analytics/overview` | Monthly import/export trends |
+| GET | `/api/v1/analytics/forwarders` | Forwarder breakdown |
+| GET | `/api/v1/analytics/containers` | Container size distribution |
+| GET | `/api/v1/analytics/totals` | Total counts and values |
+| GET | `/api/v1/analytics/status` | Status breakdown |
+| POST | `/api/v1/export/upload` | Bulk upload exports from Excel |
+
+---
+
+## Testing Instructions
+
+1. **Restart the backend server** to load new routes
+2. **Run the database migration** if you have existing data
+3. **Test Excel Upload**:
+   - Download the template from the Export page
+   - Fill in data matching the headers
+   - Upload the Excel file
+4. **Test Dashboard**: Verify stats update in real-time
+5. **Test Analytics**: Verify charts display real data
+
+---
+
+## Files Modified
+
+| File | Type | Description |
+|------|------|-------------|
+| [ExcelUploadModal.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/components/shared/ExcelUploadModal.tsx) | Modified | Export headers updated |
+| [ExportModel.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/models/ExportModel.ts) | Modified | Added new fields |
+| [exportController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/exportController.ts) | Modified | All CRUD ops updated |
+| [exportService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/exportService.ts) | Modified | Updated interface |
+| [Export.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Export.tsx) | Modified | Updated data mapping |
+| [Dashboard.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Dashboard.tsx) | Modified | Real-time data |
+| [Analytics.tsx](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/pages/Analytics.tsx) | Modified | Real-time data |
+| [server.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/server.ts) | Modified | Added new routes |
+| [schema.sql](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/database/schema.sql) | Modified | Complete schema |
+| [dashboardController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/dashboardController.ts) | **NEW** | Dashboard API |
+| [dashboardRoutes.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/routes/dashboardRoutes.ts) | **NEW** | Dashboard routes |
+| [analyticsController.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/controllers/analyticsController.ts) | **NEW** | Analytics API |
+| [analyticsRoutes.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/routes/analyticsRoutes.ts) | **NEW** | Analytics routes |
+| [dashboardService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/dashboardService.ts) | **NEW** | Frontend service |
+| [analyticsService.ts](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Frontend/src/services/analyticsService.ts) | **NEW** | Frontend service |
+| [migrate_export_data.sql](file:///d:/Autonoetic_edge/JAYALAXMI/saildata-suite-main/Server/src/database/migrate_export_data.sql) | **NEW** | Migration script |
