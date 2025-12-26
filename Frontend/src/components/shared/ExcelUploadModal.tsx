@@ -62,41 +62,24 @@ export function ExcelUploadModal({ open, onOpenChange, type, onUploadComplete, o
   const getExpectedHeaders = () => {
     if (type === "import") {
       return [
-        "job no",
-        "", "shipper name", "invoice no & date", "fc value", "description",
-        "forwarder name", "hbl no & date", "mbl no & date", "shipping line",
-        "pol - port of loading", "terms", "container nos", "size",
-        "n.n copy received", "original docs received", "arrival status",
-        "r/o date", "do status", "be no", "be date", "assessment date",
-        "hs code", "assessed value", "duty paid", "ooc date", "destuffed date", "remarks"
+        "s_no", "job_no", "shipper_name", "invoice_no_dt", "forwarder_name",
+        "currency_fc", "invoice_value", "description", "hbl_no_dt", "mbl_no_dt",
+        "shipping_line", "pol", "terms", "container_nos", "container_size",
+        "nn_copy_rcvd", "original_docs_rcvd", "arrival_status", "ro_date",
+        "do_status_validity", "be_no", "be_date", "assess_date", "hs_code",
+        "ass_value_inr", "duty_paid", "ooc_date", "destuffed_date",
+        "security_amt_rs", "security_payment_date", "mode_of_payment",
+        "security_receipt_no", "security_receipt_date", "remarks"
       ];
     } else {
       // Export headers - key headers for validation
       // We check for key identifying headers rather than all
       return [
-        "s/no",
-        "job.no",
-        "inv.no.",
-        "s/bill no.",
-        "leo date",
-        "forwarder name",
-        "booking no.",
-        "contr.no.",
-        "size",
-        "s/line",
-        "pod",
-        "train no.",
-        "wagon no.",
-        "reward",
-        "inv.value (fc)",
-        "fob value",
-        "dbk",
-        "igst",
-        "egm no.",
-        "current",
-        "dbk scroll",
-        "scroll dt.",
-        "remarks"
+        "s_no", "job_no", "inv_no", "inv_date", "s_bill_no", "s_bill_date", "leo_date",
+        "forwarder_name", "booking_no", "contr_no", "size", "shipping_line", "pod",
+        "train_no", "wagon_no", "train_wagon_date", "reward", "inv_value_fc",
+        "fob_value_inr", "dbk_amt_inr", "igst_amount_inr", "egm_no", "egm_date",
+        "current_qye", "dbk_scroll_no", "scroll_dt", "remarks"
       ];
     }
   };

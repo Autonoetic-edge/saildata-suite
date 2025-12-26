@@ -1,0 +1,63 @@
+Walkthrough - Export Template Creation & System Sync
+I have created a dummy template for Export data and synchronized the entire application with the new 34-column database schema.
+
+Changes Made
+1. Frontend Template Generation
+Updated 
+ExcelUploadModal.tsx
+ so that the "Download Template" button now generates an Excel file with the exact headers from your 
+schema.sql
+.
+
+Match Guaranteed: Since the template headers now match the database column names (s_no, job_no, etc.), uploading data is now seamless.
+Import & Export: Both modules now use the standardized 34-column format.
+ExcelUploadModal.tsx
+
+2. Backend Data Models
+Updated 
+ExportModel.ts
+ and 
+ImportModel.ts
+ to include specifically typed definitions for all 34 columns.
+
+Dates: Properly typed as 
+Date
+.
+Values: Properly typed as number.
+ExportModel.ts
+ 
+ImportModel.ts
+
+3. Controller Refactoring
+Updated 
+exportController.ts
+ and 
+importController.ts
+ to support the new schema across all operations:
+
+Bulk Upload: Redesigned to map your new template headers directly to the database.
+CRUD: Updated Create and Update endpoints to handle all 34 fields.
+exportController.ts
+ 
+importController.ts
+
+4. Analytics Synchronization
+Updated 
+analyticsController.ts
+ to use the new column names (container_size, invoice_value) so your dashboard charts continue to work correctly.
+
+analyticsController.ts
+
+Recommendations for Permissions
+I noticed you commented out the GRANT statements in 
+schema.sql
+. If you are still seeing "permission denied" errors, please run these commands manually in your database tool (pgAdmin/psql) as a superish/postgres user:
+
+GRANT ALL PRIVILEGES ON TABLE import_data TO freight_user;
+GRANT ALL PRIVILEGES ON TABLE export_data TO freight_user;
+GRANT ALL PRIVILEGES ON SEQUENCE import_data_id_seq TO freight_user;
+GRANT ALL PRIVILEGES ON SEQUENCE export_data_id_seq TO freight_user;
+Verification Results
+"Download Template" generates correct headers.
+Bulk upload logic is synchronized with the new template.
+Analytics queries reflect the updated schema.

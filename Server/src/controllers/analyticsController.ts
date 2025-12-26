@@ -70,9 +70,9 @@ export const getContainerStats = async (req: Request, res: Response, next: NextF
         // Get container size distribution
         const containerData = await pool.query(`
             WITH import_sizes AS (
-                SELECT size, COUNT(*) as count FROM import_data 
-                WHERE size IS NOT NULL AND size != ''
-                GROUP BY size
+                SELECT container_size as size, COUNT(*) as count FROM import_data 
+                WHERE container_size IS NOT NULL AND container_size != ''
+                GROUP BY container_size
             ),
             export_sizes AS (
                 SELECT size, COUNT(*) as count FROM export_data 
@@ -80,7 +80,7 @@ export const getContainerStats = async (req: Request, res: Response, next: NextF
                 GROUP BY size
             ),
             all_sizes AS (
-                SELECT DISTINCT size FROM import_data WHERE size IS NOT NULL AND size != ''
+                SELECT DISTINCT container_size as size FROM import_data WHERE container_size IS NOT NULL AND container_size != ''
                 UNION
                 SELECT DISTINCT size FROM export_data WHERE size IS NOT NULL AND size != ''
             )
@@ -111,22 +111,22 @@ export const getAnalyticsTotals = async (req: Request, res: Response, next: Next
         const importVolume = parseInt(importCount.rows[0].count);
         const exportVolume = parseInt(exportCount.rows[0].count);
 
-        // Get total FC value from imports (this column should exist)
+        // Get total FC value from imports
         let importValueTotal = 0;
         try {
-            const importValue = await pool.query('SELECT COALESCE(SUM(fc_value), 0) as total FROM import_data');
+            const importValue = await pool.query('SELECT COALESCE(SUM(invoice_value), 0) as total FROM import_data');
             importValueTotal = parseFloat(importValue.rows[0].total) || 0;
         } catch (err) {
-            console.log('fc_value column may not exist, using 0');
+            console.log('invoice_value column may not exist in import_data, using 0');
         }
 
-        // Get total FOB value from exports - handle if column doesn't exist yet
+        // Get total value from exports
         let exportValueTotal = 0;
         try {
-            const exportValue = await pool.query('SELECT COALESCE(SUM(fob_value_inr), 0) as total FROM export_data');
+            const exportValue = await pool.query('SELECT COALESCE(SUM(inv_value_fc), 0) as total FROM export_data');
             exportValueTotal = parseFloat(exportValue.rows[0].total) || 0;
         } catch (err) {
-            console.log('fob_value_inr column may not exist yet, using 0');
+            console.log('inv_value_fc column may not exist in export_data, using 0');
         }
 
         const totalValue = importValueTotal + exportValueTotal;

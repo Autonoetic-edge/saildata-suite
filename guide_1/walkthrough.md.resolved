@@ -1,0 +1,31 @@
+# Walkthrough - Export 27-Column Schema Update
+
+I have updated the Export Logistics module to follow the exact 27-column schema derived from your file.
+
+## Changes Made
+
+### 1. Updated [schema.sql](file:///d:/Softwares/saildata-suite-master/Server/schema.sql)
+The `export_data` table has been reset to these exactly 27 columns:
+- **Differentiated Dates**: `inv_date`, `s_bill_date`, `train_wagon_date`, and `egm_date`.
+- **Standardized Naming**: `shipping_line` (from S/Line), `inv_value_fc`, `fob_value_inr`, `dbk_amt_inr`, `igst_amount_inr`.
+- **New Field**: `current_qye`.
+
+[schema.sql](file:///d:/Softwares/saildata-suite-master/Server/schema.sql)
+
+### 2. Backend & Controller Sync
+- **ExportModel.ts**: Interface updated to match the 27 columns.
+- **ExportController.ts**: CRUD operations and Bulk Upload logic refactored to use the new field names and mapping.
+- **AnalyticsController.ts**: Updated to use `size` and `inv_value_fc` for accurate dashboard statistics.
+
+[ExportModel.ts](file:///d:/Softwares/saildata-suite-master/Server/src/models/ExportModel.ts)
+[exportController.ts](file:///d:/Softwares/saildata-suite-master/Server/src/controllers/exportController.ts)
+
+### 3. Frontend Template
+Updated [ExcelUploadModal.tsx](file:///d:/Softwares/saildata-suite-master/Frontend/src/components/shared/ExcelUploadModal.tsx) so the "Download Template" for Export now produces a file with these exact 27 headers.
+
+[ExcelUploadModal.tsx](file:///d:/Softwares/saildata-suite-master/Frontend/src/components/shared/ExcelUploadModal.tsx)
+
+## Verification Results
+- The template generates 27 headers in the prescribed order.
+- Bulk upload correctly handles specialized date fields (`inv_date`, etc.).
+- The dashboard totals and container charts are synchronized with the new column names.
