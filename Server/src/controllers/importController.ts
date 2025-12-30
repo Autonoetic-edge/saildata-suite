@@ -10,7 +10,23 @@ export const getAllImports = async (req: Request, res: Response, next: NextFunct
         const limit = parseInt(req.query.limit as string) || 10;
         const offset = (page - 1) * limit;
 
-        const result = await pool.query('SELECT * FROM import_data ORDER BY created_at DESC LIMIT $1 OFFSET $2', [limit, offset]);
+        const query = `
+            SELECT 
+                id, s_no, job_no, shipper_name, invoice_no_dt, forwarder_name,
+                currency_fc, invoice_value as fc_value, description, hbl_no_dt, mbl_no_dt,
+                shipping_line as s_line, pol, terms, container_nos, container_size as size,
+                nn_copy_rcvd, original_docs_rcvd, arrival_status, ro_date,
+                do_status_validity as do_status, be_no, be_date, assess_date as assessment_date, 
+                hs_code, ass_value_inr as assessed_value, duty_paid, ooc_date, destuffed_date,
+                security_amt_rs, security_payment_date, mode_of_payment,
+                security_receipt_no, security_receipt_date, remarks,
+                created_at, updated_at
+            FROM import_data
+            ORDER BY created_at DESC 
+            LIMIT $1 OFFSET $2
+        `;
+
+        const result = await pool.query(query, [limit, offset]);
         const countResult = await pool.query('SELECT COUNT(*) FROM import_data');
 
         res.status(200).json({
@@ -26,7 +42,7 @@ export const getAllImports = async (req: Request, res: Response, next: NextFunct
 
 export const createImport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const data: ImportData = req.body;
+        const data: any = req.body;
         const query = `
             INSERT INTO import_data (
                 s_no, job_no, shipper_name, invoice_no_dt, forwarder_name,
@@ -42,11 +58,11 @@ export const createImport = async (req: Request, res: Response, next: NextFuncti
         `;
         const values = [
             data.s_no, data.job_no, data.shipper_name, data.invoice_no_dt, data.forwarder_name,
-            data.currency_fc, data.invoice_value, data.description, data.hbl_no_dt, data.mbl_no_dt,
-            data.shipping_line, data.pol, data.terms, data.container_nos, data.container_size,
+            data.currency_fc, data.invoice_value || data.fc_value, data.description, data.hbl_no_dt, data.mbl_no_dt,
+            data.shipping_line || data.s_line, data.pol, data.terms, data.container_nos, data.container_size || data.size,
             data.nn_copy_rcvd, data.original_docs_rcvd, data.arrival_status, data.ro_date,
-            data.do_status_validity, data.be_no, data.be_date, data.assess_date, data.hs_code,
-            data.ass_value_inr, data.duty_paid, data.ooc_date, data.destuffed_date,
+            data.do_status_validity || data.do_status, data.be_no, data.be_date, data.assess_date || data.assessment_date, data.hs_code,
+            data.ass_value_inr || data.assessed_value, data.duty_paid, data.ooc_date, data.destuffed_date,
             data.security_amt_rs, data.security_payment_date, data.mode_of_payment,
             data.security_receipt_no, data.security_receipt_date, data.remarks
         ];
@@ -61,7 +77,7 @@ export const createImport = async (req: Request, res: Response, next: NextFuncti
 export const updateImport = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const id = parseInt(req.params.id || '0');
-        const data: ImportData = req.body;
+        const data: any = req.body;
         const query = `
             UPDATE import_data SET
                 s_no = $1, job_no = $2, shipper_name = $3, invoice_no_dt = $4, forwarder_name = $5,
@@ -77,11 +93,11 @@ export const updateImport = async (req: Request, res: Response, next: NextFuncti
         `;
         const values = [
             data.s_no, data.job_no, data.shipper_name, data.invoice_no_dt, data.forwarder_name,
-            data.currency_fc, data.invoice_value, data.description, data.hbl_no_dt, data.mbl_no_dt,
-            data.shipping_line, data.pol, data.terms, data.container_nos, data.container_size,
+            data.currency_fc, data.invoice_value || data.fc_value, data.description, data.hbl_no_dt, data.mbl_no_dt,
+            data.shipping_line || data.s_line, data.pol, data.terms, data.container_nos, data.container_size || data.size,
             data.nn_copy_rcvd, data.original_docs_rcvd, data.arrival_status, data.ro_date,
-            data.do_status_validity, data.be_no, data.be_date, data.assess_date, data.hs_code,
-            data.ass_value_inr, data.duty_paid, data.ooc_date, data.destuffed_date,
+            data.do_status_validity || data.do_status, data.be_no, data.be_date, data.assess_date || data.assessment_date, data.hs_code,
+            data.ass_value_inr || data.assessed_value, data.duty_paid, data.ooc_date, data.destuffed_date,
             data.security_amt_rs, data.security_payment_date, data.mode_of_payment,
             data.security_receipt_no, data.security_receipt_date, data.remarks, id
         ];
@@ -144,6 +160,45 @@ export const bulkUploadImports = async (req: Request, res: Response, next: NextF
 
         const results = [];
 
+        const normalizeHeader = (h: string) => h.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const columnMap: { [key: string]: string } = {
+            'sno': 's_no',
+            'jobno': 'job_no',
+            'shippername': 'shipper_name',
+            'invoicenodt': 'invoice_no_dt',
+            'forwardername': 'forwarder_name',
+            'currencyfc': 'currency_fc',
+            'invoicevalue': 'invoice_value',
+            'description': 'description',
+            'hblnodt': 'hbl_no_dt',
+            'mblnodt': 'mbl_no_dt',
+            'shippingline': 'shipping_line',
+            'pol': 'pol',
+            'terms': 'terms',
+            'containernos': 'container_nos',
+            'containersize': 'container_size',
+            'nncopyrcvd': 'nn_copy_rcvd',
+            'originaldocsrcvd': 'original_docs_rcvd',
+            'arrivalstatus': 'arrival_status',
+            'rodate': 'ro_date',
+            'dostatusvalidity': 'do_status_validity',
+            'beno': 'be_no',
+            'bedate': 'be_date',
+            'assessdate': 'assess_date',
+            'hscode': 'hs_code',
+            'assvalueinr': 'ass_value_inr',
+            'dutypaid': 'duty_paid',
+            'oocdate': 'ooc_date',
+            'destuffeddate': 'destuffed_date',
+            'securityamtrs': 'security_amt_rs',
+            'securitypaymentdate': 'security_payment_date',
+            'modeofpayment': 'mode_of_payment',
+            'securityreceiptno': 'security_receipt_no',
+            'securityreceiptdate': 'security_receipt_date',
+            'remarks': 'remarks'
+        };
+
         const parseBoolean = (val: any) => {
             if (typeof val === 'boolean') return val;
             if (typeof val === 'string') {
@@ -155,6 +210,8 @@ export const bulkUploadImports = async (req: Request, res: Response, next: NextF
 
         const parseDate = (dateStr: any) => {
             if (!dateStr) return null;
+            if (String(dateStr).toLowerCase().trim() === 'do') return null;
+            if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
             if (typeof dateStr === 'number') {
                 const excelEpoch = new Date(1899, 11, 30);
                 const date = new Date(excelEpoch.getTime() + dateStr * 86400000);
@@ -166,52 +223,59 @@ export const bulkUploadImports = async (req: Request, res: Response, next: NextF
 
         const parseDecimal = (val: any) => {
             if (val === null || val === undefined || val === '') return null;
+            if (String(val).toLowerCase().trim() === 'do') return null;
             const num = parseFloat(String(val).replace(/,/g, ''));
             return isNaN(num) ? null : num;
         };
 
+        const isDo = (val: any): boolean => {
+            if (val === null || val === undefined) return false;
+            return String(val).toLowerCase().trim() === 'do';
+        };
+
+        const orderOfColumns = [
+            's_no', 'job_no', 'shipper_name', 'invoice_no_dt', 'forwarder_name',
+            'currency_fc', 'invoice_value', 'description', 'hbl_no_dt', 'mbl_no_dt',
+            'shipping_line', 'pol', 'terms', 'container_nos', 'container_size',
+            'nn_copy_rcvd', 'original_docs_rcvd', 'arrival_status', 'ro_date',
+            'do_status_validity', 'be_no', 'be_date', 'assess_date', 'hs_code',
+            'ass_value_inr', 'duty_paid', 'ooc_date', 'destuffed_date',
+            'security_amt_rs', 'security_payment_date', 'mode_of_payment',
+            'security_receipt_no', 'security_receipt_date', 'remarks'
+        ];
+
+        const lastValues: { [key: string]: any } = {};
+
         for (const row of parsedData) {
             const normalizedRow: any = {};
             Object.keys(row).forEach(key => {
-                normalizedRow[key.toLowerCase().trim()] = row[key];
+                const normalizedKey = normalizeHeader(key);
+                const dbKey = columnMap[normalizedKey] || normalizedKey;
+                normalizedRow[dbKey] = row[key];
             });
 
-            const rowValues = [
-                normalizedRow['s_no'] || '',
-                normalizedRow['job_no'] || '',
-                normalizedRow['shipper_name'] || '',
-                normalizedRow['invoice_no_dt'] || '',
-                normalizedRow['forwarder_name'] || '',
-                normalizedRow['currency_fc'] || '',
-                parseDecimal(normalizedRow['invoice_value']),
-                normalizedRow['description'] || '',
-                normalizedRow['hbl_no_dt'] || '',
-                normalizedRow['mbl_no_dt'] || '',
-                normalizedRow['shipping_line'] || '',
-                normalizedRow['pol'] || '',
-                normalizedRow['terms'] || '',
-                normalizedRow['container_nos'] || '',
-                normalizedRow['container_size'] || '',
-                parseBoolean(normalizedRow['nn_copy_rcvd']),
-                parseBoolean(normalizedRow['original_docs_rcvd']),
-                normalizedRow['arrival_status'] || '',
-                parseDate(normalizedRow['ro_date']),
-                parseDate(normalizedRow['do_status_validity']),
-                normalizedRow['be_no'] || '',
-                parseDate(normalizedRow['be_date']),
-                parseDate(normalizedRow['assess_date']),
-                normalizedRow['hs_code'] || '',
-                parseDecimal(normalizedRow['ass_value_inr']),
-                parseDecimal(normalizedRow['duty_paid']),
-                parseDate(normalizedRow['ooc_date']),
-                parseDate(normalizedRow['destuffed_date']),
-                parseDecimal(normalizedRow['security_amt_rs']),
-                parseDate(normalizedRow['security_payment_date']),
-                normalizedRow['mode_of_payment'] || '',
-                normalizedRow['security_receipt_no'] || '',
-                parseDate(normalizedRow['security_receipt_date']),
-                normalizedRow['remarks'] || ''
-            ];
+            const rowValues = orderOfColumns.map(key => {
+                let val = normalizedRow[key];
+
+                if (isDo(val)) {
+                    val = lastValues[key];
+                } else if (val !== null && val !== undefined && val !== '') {
+                    lastValues[key] = val;
+                }
+
+                // Handle type specific parsing after "do" filling
+                if (['nn_copy_rcvd', 'original_docs_rcvd'].includes(key)) {
+                    return parseBoolean(val);
+                }
+                if (['ro_date', 'do_status_validity', 'be_date', 'assess_date', 'ooc_date', 'destuffed_date', 'security_payment_date', 'security_receipt_date'].includes(key)) {
+                    return parseDate(val);
+                }
+                if (['invoice_value', 'ass_value_inr', 'duty_paid', 'security_amt_rs'].includes(key)) {
+                    return parseDecimal(val);
+                }
+
+                return val !== null && val !== undefined && val !== '' ? String(val).trim() : '';
+            });
 
             try {
                 const result = await pool.query(query, rowValues);
